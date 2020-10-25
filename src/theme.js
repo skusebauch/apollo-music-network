@@ -4,8 +4,12 @@ import { grey, pink } from '@material-ui/core/colors';
 const theme = createMuiTheme({
   palette: {
     type: 'dark',
-    primary: grey,
-    secondary: pink,
+    primary: {
+      main: '#212121',
+    },
+    secondary: {
+      main: '#f50057',
+    },
   },
 });
 
