@@ -1,10 +1,17 @@
 import React from 'react';
+import AddSong from './components/AddSong';
+import Header from './components/Header';
+import SongList from './components/SongList';
+import SongPlayer from './components/SongPlayer';
 
 function App() {
   return (
-    <div>
-      <p>starter file</p>
-    </div>
+    <>
+      <Header />
+      <AddSong />
+      <SongList />
+      <SongPlayer />
+    </>
   );
 }
 
