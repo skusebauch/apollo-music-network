@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Button,
   Dialog,
@@ -11,6 +11,8 @@ import {
 } from '@material-ui/core';
 import LinkIcon from '@material-ui/icons/Link';
 import { AddBoxOutlined } from '@material-ui/icons';
+import SoundcloudPlayer from 'react-player/lib/players/SoundCloud';
+import YoutubePlayer from 'react-player/lib/players/YouTube';
 
 const useStyles = makeStyles(theme => ({
   container: {
@@ -30,9 +32,18 @@ const useStyles = makeStyles(theme => ({
     width: '90%',
   },
 }));
+
 function AddSong() {
-  const [dialog, setDialog] = useState(false);
   const classes = useStyles();
+  const [url, setUrl] = useState('');
+  const [playable, setPlayable] = useState(false);
+  const [dialog, setDialog] = useState(false);
+
+  useEffect(() => {
+    const isPlayable =
+      SoundcloudPlayer.canPlay(url) || YoutubePlayer.canPlay(url);
+    setPlayable(isPlayable);
+  }, [url]);
 
   const handleCloseDialog = () => {
     setDialog(false);
@@ -72,6 +83,8 @@ function AddSong() {
       </Dialog>
       <TextField
         className={classes.urlInput}
+        onChange={event => setUrl(event.target.value)}
+        value={url}
         placeholder='Add Youtube or Soundcloud Url'
         fullWidth
         margin='normal'
@@ -85,6 +98,7 @@ function AddSong() {
         }}
       />
       <Button
+        disabled={!playable}
         className={classes.addSongButton}
         onClick={() => setDialog(true)}
         variant='contained'
