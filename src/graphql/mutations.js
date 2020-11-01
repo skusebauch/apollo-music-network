@@ -17,15 +17,7 @@ export const ADD_SONG = gql`
         url: $url
       }
     ) {
-      returning {
-        artist
-        created_at
-        duration
-        id
-        thumbnail
-        title
-        url
-      }
+      affected_rows
     }
   }
 `;

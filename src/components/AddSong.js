@@ -85,7 +85,7 @@ function AddSong() {
       await addSong({
         variables: {
           url: url.length > 0 ? url : null,
-          thumbnail: thumbnail.length > 0 ? url : null,
+          thumbnail: thumbnail.length > 0 ? thumbnail : null,
           duration: duration > 0 ? duration : null,
           title: title.length > 0 ? title : null,
           artist: artist.length > 0 ? artist : null,
@@ -103,11 +103,12 @@ function AddSong() {
     const duration = player.getDuration();
     const { title, video_id, author } = player.getVideoData();
     const thumbnail = `http://img.youtube.com/vi/${video_id}/0.jpg`;
+
     return {
-      duration: duration,
-      title: title,
+      duration,
+      title,
       artist: author,
-      thumbnail: thumbnail,
+      thumbnail,
     };
   }
 
