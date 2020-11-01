@@ -16,6 +16,7 @@ import { GET_SONGS } from '../graphql/queries';
 
 function SongList() {
   const { data, loading, error } = useQuery(GET_SONGS);
+
   if (loading) {
     return (
       <div

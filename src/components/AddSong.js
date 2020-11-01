@@ -11,6 +11,7 @@ import {
 } from '@material-ui/core';
 import LinkIcon from '@material-ui/icons/Link';
 import { AddBoxOutlined } from '@material-ui/icons';
+import ReactPlayer from 'react-player';
 import SoundcloudPlayer from 'react-player/lib/players/SoundCloud';
 import YoutubePlayer from 'react-player/lib/players/YouTube';
 
@@ -38,6 +39,12 @@ function AddSong() {
   const [url, setUrl] = useState('');
   const [playable, setPlayable] = useState(false);
   const [dialog, setDialog] = useState(false);
+  const [song, setSong] = useState({
+    duration: 0,
+    title: '',
+    artist: '',
+    thumbnail: '',
+  });
 
   useEffect(() => {
     const isPlayable =
@@ -45,10 +52,56 @@ function AddSong() {
     setPlayable(isPlayable);
   }, [url]);
 
-  const handleCloseDialog = () => {
-    setDialog(false);
-  };
+  function handleChangeSong(event) {
+    const { name, value } = event.target;
+    setSong(prevSong => ({
+      ...prevSong,
+      [name]: value,
+    }));
+  }
 
+  function handleCloseDialog() {
+    setDialog(false);
+  }
+
+  async function handleEditSong({ player }) {
+    const nestedPlayer = player.player.player;
+    let songData;
+    if (nestedPlayer.getVideoData) {
+      songData = getYoutubeInfo(nestedPlayer);
+    } else if (nestedPlayer.getCurrentSound) {
+      songData = await getSoundcloudInfo(nestedPlayer);
+    }
+    setSong({ ...songData, url });
+  }
+
+  function getYoutubeInfo(player) {
+    const duration = player.getDuration();
+    const { title, video_id, author } = player.getVideoData();
+    const thumbnail = `http://img.youtube.com/vi/${video_id}/0.jpg`;
+    return {
+      duration: duration,
+      title: title,
+      artist: author,
+      thumbnail: thumbnail,
+    };
+  }
+
+  function getSoundcloudInfo(player) {
+    return new Promise(resolve => {
+      player.getCurrentSound(songData => {
+        if (songData) {
+          resolve({
+            duration: Number(songData.duration / 1000),
+            title: songData.title,
+            artist: songData.user.username,
+            thumbnail: songData.artwork_url.replace('-large', '-t500x500'),
+          });
+        }
+      });
+    });
+  }
+  const { thumbnail, title, artist } = song;
   return (
     <div className={classes.container}>
       <Dialog
@@ -59,13 +112,29 @@ function AddSong() {
         <DialogTitle>Edit Song</DialogTitle>
         <DialogContent>
           <img
-            src='https://i1.sndcdn.com/artworks-000670470790-ej1gvb-t500x500.jpg'
+            src={thumbnail}
             alt='Sont thumbnail'
             className={classes.thumbnail}
           />
-          <TextField margin='dense' name='title' label='Title' fullWidth />
-          <TextField margin='dense' name='artist' label='Artist' fullWidth />
           <TextField
+            value={title}
+            onChange={handleChangeSong}
+            margin='dense'
+            name='title'
+            label='Title'
+            fullWidth
+          />
+          <TextField
+            value={artist}
+            onChange={handleChangeSong}
+            margin='dense'
+            name='artist'
+            label='Artist'
+            fullWidth
+          />
+          <TextField
+            value={thumbnail}
+            onChange={handleChangeSong}
             margin='dense'
             name='thumbnail'
             label='Thumbnail'
@@ -107,6 +176,7 @@ function AddSong() {
       >
         ADD
       </Button>
+      <ReactPlayer url={url} hidden onReady={handleEditSong} />
     </div>
   );
 }
