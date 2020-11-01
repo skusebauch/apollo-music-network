@@ -10,10 +10,12 @@ import {
   makeStyles,
 } from '@material-ui/core';
 import LinkIcon from '@material-ui/icons/Link';
-import { AddBoxOutlined } from '@material-ui/icons';
+import { AddBoxOutlined, ErrorOutlineRounded } from '@material-ui/icons';
 import ReactPlayer from 'react-player';
 import SoundcloudPlayer from 'react-player/lib/players/SoundCloud';
 import YoutubePlayer from 'react-player/lib/players/YouTube';
+import { ADD_SONG } from '../graphql/mutations';
+import { useMutation } from '@apollo/react-hooks';
 
 const useStyles = makeStyles(theme => ({
   container: {
@@ -34,17 +36,19 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
+const DEFAULT_SONG = {
+  duration: 0,
+  title: '',
+  artist: '',
+  thumbnail: '',
+};
 function AddSong() {
   const classes = useStyles();
+  const [addSong, { error }] = useMutation(ADD_SONG);
   const [url, setUrl] = useState('');
   const [playable, setPlayable] = useState(false);
   const [dialog, setDialog] = useState(false);
-  const [song, setSong] = useState({
-    duration: 0,
-    title: '',
-    artist: '',
-    thumbnail: '',
-  });
+  const [song, setSong] = useState(DEFAULT_SONG);
 
   useEffect(() => {
     const isPlayable =
@@ -75,6 +79,26 @@ function AddSong() {
     setSong({ ...songData, url });
   }
 
+  async function handleAddSong() {
+    try {
+      const { url, thumbnail, duration, title, artist } = song;
+      await addSong({
+        variables: {
+          url: url.length > 0 ? url : null,
+          thumbnail: thumbnail.length > 0 ? url : null,
+          duration: duration > 0 ? duration : null,
+          title: title.length > 0 ? title : null,
+          artist: artist.length > 0 ? artist : null,
+        },
+      });
+      handleCloseDialog();
+      setSong(DEFAULT_SONG);
+      setUrl('');
+    } catch (error) {
+      console.error('Error adding Song', error);
+    }
+  }
+
   function getYoutubeInfo(player) {
     const duration = player.getDuration();
     const { title, video_id, author } = player.getVideoData();
@@ -101,7 +125,12 @@ function AddSong() {
       });
     });
   }
+
+  function handleError(field) {
+    return error?.graphQLErrors[0]?.extensions?.path.includes(field);
+  }
   const { thumbnail, title, artist } = song;
+
   return (
     <div className={classes.container}>
       <Dialog
@@ -123,6 +152,8 @@ function AddSong() {
             name='title'
             label='Title'
             fullWidth
+            error={handleError('title')}
+            helperText={handleError('title') && 'Fill out field'}
           />
           <TextField
             value={artist}
@@ -131,6 +162,8 @@ function AddSong() {
             name='artist'
             label='Artist'
             fullWidth
+            error={handleError('artist')}
+            helperText={handleError('artist') && 'Fill out field'}
           />
           <TextField
             value={thumbnail}
@@ -139,13 +172,15 @@ function AddSong() {
             name='thumbnail'
             label='Thumbnail'
             fullWidth
+            error={handleError('thumbnail')}
+            helperText={handleError('thumbnail') && 'Fill out field'}
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog} color='secondary'>
             Cancel
           </Button>
-          <Button variant='outlined' color='primary'>
+          <Button onClick={handleAddSong} variant='outlined' color='primary'>
             Add Song
           </Button>
         </DialogActions>
